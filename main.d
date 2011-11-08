@@ -42,52 +42,72 @@ int do_exit(int ret) {
 
 int main(string[] args)
 {
-	writeln("File rename utility.  Flavio J. Saraiva @ 2011-11-04");
+	writeln("File rename utility.  Flavio J. Saraiva @ 2011-11-08");
 	writeln("https://github.com/flaviojs/RenameRandom");
 	writeln();
-	writeln("Searches for files named \"<anything><number>.<anything>\" in a directory.");
-	writeln("Renames the numeric part of each file to a unique random number in the range [1,numfiles]");
+	writeln("Usage: RenameRandom [dir1 dir2 ...]");
+	writeln();
+	writeln("Asks for a directory is none is given as an argument.");
+	writeln("Searches for files named \"<anything><number>.<anything>\" in the directories.");
+	writeln("Renames the numeric part to a unique random number in the range [1,numfiles].");
+	writeln("Logs to RenameRandom.csv as \"<oldfilename>\",\"<newfilename>\"");
+	writeln();
 	writeln();
 
-	string dir;
+	string[] dirs;
 	if (args.length >= 2)
-		dir = strip(args[1]);
+		dirs = args[1..$];
 	else
-		dir = ask_dir();
-	if ( !isDir(dir) ) {
-		writeln("ERROR - ", dir, " is not a directory");
-		return(do_exit(1));
+		dirs ~= ask_dir();
+	foreach (dir; dirs)
+	{
+		if (!isDir(dir))
+		{
+			writeln("ERROR - ", dir, " is not a directory");
+			return(do_exit(1));
+		}
+		writeln("Directory ",dir);
 	}
-	writeln("Work directory is ",dir);
 
 	writeln("Searching for files...");
 	auto r = regex(r"^(.*)(\d+)(\.[^\.\\/]*)$");
 	string[] filenames;
-	foreach (string filename; dirEntries(dir, SpanMode.depth))
-	{
-		if (!isFile(filename))
-			continue;
-		auto m = match(filename, r);
-		if (m.empty)
-			continue;
-		filenames ~= filename;
+	foreach (dir; dirs) {
+		foreach (string filename; dirEntries(dir, SpanMode.depth))
+		{
+			if (!isFile(filename))
+				continue;
+			auto m = match(filename, r);
+			if (m.empty)
+				continue;
+			filenames ~= filename;
+		}
 	}
 	writeln("Found ", filenames.length, " files");
 
 	if (filenames.length > 0 && ask_rename(filenames) == 'y') {
 		writeln("Renaming files...");
+		string csv = "RenameRandom.csv";
+		auto dquote = regex("(\")", "g");
 		string[] newfilenames;
 		int[] numbers;
 		for (int num = 1; num <= filenames.length; ++num)
 			numbers ~= num;
 		auto rnd = Random(unpredictableSeed);
+		if (exists(csv))
+			std.file.write(csv,"");
 		for (auto i = 0; i < filenames.length; ++i) {
 			string filename = filenames[i];
 			auto numidx = uniform(0, numbers.length, rnd);
 			int num = numbers[numidx];
 			numbers[numidx] = numbers[numbers.length - 1];
 			numbers.length = numbers.length - 1;
-			newfilenames ~= replace(filename, r, format("$01%d$03", num));
+			string newfilename = replace(filename, r, format("$01%d$03", num));
+			newfilenames ~= newfilename;
+			string csvline = format("\"%s\",\"%s\"\r\n",
+				replace(filename, dquote, "\"\""),
+				replace(newfilename, dquote, "\"\""));
+			std.file.append(csv, csvline);
 		}
 		for (auto i = 0; i < filenames.length; ++i) {
 			string filename = filenames[i];
