@@ -5,6 +5,15 @@ import std.regex;
 import std.random;
 
 
+string ask_dir() {
+	writeln("Directory: (leave empty to use the current directory)");
+	string dir = strip(readln());
+	if (dir == "")
+		dir = getcwd();
+	return(dir);
+}
+
+
 char ask_rename(string[] filenames) {
 	for (;;) {
 		writeln("Are you sure you want to rename the files? (Yes/No/List)");
@@ -40,10 +49,11 @@ int main(string[] args)
 	writeln("Renames the numeric part of each file to a unique random number in the range [1,numfiles]");
 	writeln();
 
-	writeln("Directory: (leave empty to use the current directory)");
-	string dir = strip(readln());
-	if (dir == "")
-		dir = getcwd();
+	string dir;
+	if (args.length >= 2)
+		dir = strip(args[1]);
+	else
+		dir = ask_dir();
 	if ( !isDir(dir) ) {
 		writeln("ERROR - ", dir, " is not a directory");
 		return(do_exit(1));
