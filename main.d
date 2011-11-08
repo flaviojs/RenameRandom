@@ -53,7 +53,7 @@ int main(string[] args)
 	writeln("Searching for files...");
 	auto r = regex(r"^(.*)(\d+)(\.[^\.\\/]*)$");
 	string[] filenames;
-	foreach (string filename; dirEntries(dir, SpanMode.shallow))
+	foreach (string filename; dirEntries(dir, SpanMode.depth))
 	{
 		if (!isFile(filename))
 			continue;
