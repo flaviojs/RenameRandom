@@ -47,8 +47,8 @@ int main(string[] args)
 	writeln();
 	writeln("Usage: RenameRandom [dir1 dir2 ...]");
 	writeln();
-	writeln("Asks for a directory is none is given as an argument.");
-	writeln("Searches for files named \"<anything><number>.<anything>\" in the directories.");
+	writeln("Asks for a directory if none is given as an argument.");
+	writeln("Searches for files named \"<anything><number>.<anything>\" in the directories and subdirectories.");
 	writeln("Renames the numeric part to a unique random number in the range [1,numfiles].");
 	writeln("Logs to RenameRandom.csv as \"<oldfilename>\",\"<newfilename>\"");
 	writeln();
@@ -70,7 +70,7 @@ int main(string[] args)
 	}
 
 	writeln("Searching for files...");
-	auto r = regex(r"^(.*)(\d+)(\.[^\.\\/]*)$");
+	auto r = regex(r"^(.*[^\d]|)(\d+)(\.[^\.\\/]*)$");
 	string[] filenames;
 	foreach (dir; dirs) {
 		foreach (string filename; dirEntries(dir, SpanMode.depth))
